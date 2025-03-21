@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Inventory System{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h2>Product Inventory</h2>
+    <div class="total-value">
+        <span>Total Inventory Value:</span>
+        <strong>${{ total_value }}</strong>
+    </div>
+</section>
+
+<section class="filters-container">
+    <div class="sort-controls">
+        <span>Sort by:</span>
+        <a href="{{ url_for('index', sort='name', category=category) }}" class="sort-btn {% if sort == 'name' %}active{% endif %}">Name {% if sort == 'name' %}<i class="fas fa-sort-down"></i>{% endif %}</a>
+        <a href="{{ url_for('index', sort='price', category=category) }}" class="sort-btn {% if sort == 'price' %}active{% endif %}">Price {% if sort == 'price' %}<i class="fas fa-sort-down"></i>{% endif %}</a>
+        <a href="{{ url_for('index', sort='quantity', category=category) }}" class="sort-btn {% if sort == 'quantity' %}active{% endif %}">Quantity {% if sort == 'quantity' %}<i class="fas fa-sort-down"></i>{% endif %}</a>
+    </div>
+    
+    <div class="category-filter">
+        <span>Filter by Category:</span>
+        <a href="{{ url_for('index', sort=sort) }}" class="category-btn {% if not category %}active{% endif %}">All</a>
+        {% for cat in categories %}
+        <a href="{{ url_for('index', sort=sort, category=cat) }}" class="category-btn {% if category == cat %}active{% endif %}">{{ cat }}</a>
+        {% endfor %}
+    </div>
+    
+    <div class="export-controls">
+        {% if products %}
+        {% if category %}
+        <a href="{{ url_for('export_pdf', category=category) }}" class="btn btn-export" target="_blank">
+            <i class="fas fa-file-pdf"></i> Export {{ category }} Products to PDF
+        </a>
+        {% else %}
+        <a href="{{ url_for('export_pdf') }}" class="btn btn-export" target="_blank">
+            <i class="fas fa-file-pdf"></i> Export All Products to PDF
+        </a>
+        {% endif %}
+        {% endif %}
+    </div>
+</section>
+
+{% if products %}
+<div class="table-container">
+    <table class="product-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Value</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ product.name }}</td>
+                <td>{{ product.category }}</td>
+                <td>{{ product.quantity }}</td>
+                <td>${{ product.price }}</td>
+                <td>${{ product.get_value() }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('edit_product', id=product.id) }}" class="btn btn-edit" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <button class="btn btn-delete" title="Delete" onclick="confirmDelete({{ product.id }}, '{{ product.name }}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-box-open fa-4x"></i>
+    <p>No products in inventory yet.</p>
+    <a href="{{ url_for('add_product') }}" class="btn btn-primary">Add Your First Product</a>
+</div>
+{% endif %}
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <h3>Confirm Deletion</h3>
+        <p>Are you sure you want to delete <span id="productName"></span>?</p>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <form id="deleteForm" method="POST" action="">
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function confirmDelete(id, name) {
+        document.getElementById('productName').textContent = name;
+        document.getElementById('deleteForm').action = "{{ url_for('delete_product', id=0) }}".replace('0', id);
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('deleteModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+</script>
+{% endblock %}

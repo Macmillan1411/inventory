@@ -1,0 +1,5 @@
+.vscode
+.ruff_cache
+drawings/
+venv/
+__pycache__/

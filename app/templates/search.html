@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Products - Inventory System{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h2>Search Products</h2>
+</section>
+
+<div class="search-container">
+    <form method="GET" action="{{ url_for('search') }}" class="search-form">
+        <div class="search-input-group">
+            <input type="text" name="q" value="{{ query }}" placeholder="Search by product name..." required>
+            <select name="category">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </div>
+    </form>
+</div>
+
+{% if query %}
+<div class="search-results">
+    <h3>Results for "{{ query }}" {% if category %}in category "{{ category }}"{% endif %}</h3>
+
+    {% if products %}
+    <div class="export-controls">
+        <a href="{{ url_for('export_pdf', category=category) }}" class="btn btn-export" target="_blank">
+            <i class="fas fa-file-pdf"></i> Export Results to PDF
+        </a>
+    </div>
+
+    <div class="table-container">
+        <table class="product-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Value</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>{{ product.name }}</td>
+                    <td>{{ product.category }}</td>
+                    <td>{{ product.quantity }}</td>
+                    <td>${{ product.price }}</td>
+                    <td>${{ product.get_value() }}</td>
+                    <td class="actions">
+                        <a href="{{ url_for('edit_product', id=product.id) }}" class="btn btn-edit" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn btn-delete" title="Delete" onclick="confirmDelete({{ product.id }}, '{{ product.name }}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-search fa-4x"></i>
+        <p>No products found matching "{{ query }}"{% if category %} in category "{{ category }}"{% endif %}.</p>
+        <a href="{{ url_for('add_product') }}" class="btn btn-primary">Add New Product</a>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Delete Confirmation Modal (same as in index.html) -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <h3>Confirm Deletion</h3>
+        <p>Are you sure you want to delete <span id="productName"></span>?</p>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <form id="deleteForm" method="POST" action="">
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function confirmDelete(id, name) {
+        document.getElementById('productName').textContent = name;
+        document.getElementById('deleteForm').action = "{{ url_for('delete_product', id=0) }}".replace('0', id);
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('deleteModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+</script>
+{% endblock %}
