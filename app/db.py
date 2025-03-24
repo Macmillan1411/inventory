@@ -1,16 +1,14 @@
 from flask_sqlalchemy import SQLAlchemy
+from app.config import Config
 
 db = SQLAlchemy()
 
-
 def init_db(app):
     """Initialize the database with the Flask app"""
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///inventory.db"
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config.from_object(Config)
 
     db.init_app(app)
 
-    # Import models to ensure they're registered with SQLAlchemy
     from app.models import Product, User
 
     # Create tables if they don't exist
